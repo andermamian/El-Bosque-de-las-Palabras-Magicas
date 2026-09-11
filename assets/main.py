@@ -493,6 +493,10 @@ class Efectos:
     def _despertar(self):
         """Abre el mezclador. En el navegador puede no estar listo hasta que
         el nino toca la pantalla, por eso se reintenta mas adelante."""
+        # No inicializar SDL_mixer en Pygbag: algunos navegadores detienen todo
+        # el runtime con "MEDIA USER ACTION REQUIRED" antes de dibujar.
+        if ES_WEB:
+            return False
         if self.ok or self._intentos > 15:
             return self.ok
         self._intentos += 1
@@ -2964,11 +2968,15 @@ class EscenaAlbum(Escena):
 # ==========================================================================
 class Juego:
     def __init__(self):
-        pygame.init()
-        try:
-            pygame.mixer.pre_init(44100, -16, 2, 512)
-        except Exception:
-            pass
+        if ES_WEB:
+            pygame.display.init()
+            pygame.font.init()
+        else:
+            pygame.init()
+            try:
+                pygame.mixer.pre_init(44100, -16, 2, 512)
+            except Exception:
+                pass
         self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption(TITULO)
         self.reloj = pygame.time.Clock()
