@@ -4,9 +4,23 @@
 =============================================================================
   EL BOSQUE DE LAS PALABRAS MAGICAS
   Juego educativo de conciencia fonologica e iniciacion a la lectoescritura
-  Grado: 1o de primaria  |  Metodo: silabico-fonetico
+  Grados: 1o y 2o de primaria  |  Metodo: silabico-fonetico + comprension lectora
   Autor: Anderson Mamian Chicangana
 =============================================================================
+
+LOS NIVELES
+-----------
+  Zona 1 - Sonidos y silabas
+    1  El Rio de las Vocales    vocal inicial de cada dibujo
+    2  El Puente Silabico       silaba que falta en la palabra
+    3  El Gran Arbol            ordenar las silabas de la palabra
+  Zona 2 - Comprension lectora
+    4  Palabra y Dibujo         leer la palabra y tocar su dibujo
+    5  La Frase Incompleta      elegir la palabra que completa la frase
+    6  El Pergamino Magico      ordenar las palabras de una oracion
+    7  Cuentos Cortos           preguntas sobre lo que dice el texto
+    8  El Gran Cuento           orden de hechos, inferencias, idea principal
+    9  Verdad o Mentira         decidir si una frase es verdadera o falsa
 
 REQUISITOS DE EJECUCION (ESCRITORIO)
 ------------------------------------
@@ -47,7 +61,7 @@ Android, sin instalar nada. Ver README_WEB.md para el paso a paso.
 CONTROLES
 ---------
     Raton / pantalla tactil : toda la interaccion
-    1..5                    : seleccionar opcion en el nivel 1
+    1..9                    : elegir una opcion (niveles 1 y 4 a 9)
     ESPACIO                 : repetir instruccion (Lina la Lechuza)
     M                       : encender / apagar el sonido
     ESC                     : volver / pausar
@@ -83,11 +97,9 @@ if ES_WEB:
 # --------------------------------------------------------------------------
 # DEPENDENCIAS OPCIONALES
 # --------------------------------------------------------------------------
-try:
-    import numpy as _np
-    TIENE_NUMPY = True
-except ImportError:
-    TIENE_NUMPY = False
+# No se usa numpy en el juego. Mantenerlo desactivado evita que Pygbag
+# descargue un wheel grande en cada primer arranque web/móvil.
+TIENE_NUMPY = False
 
 try:
     if ES_WEB:
@@ -422,8 +434,8 @@ class Voz:
                 self.motor_sistema = None
                 break
 
-    def decir(self, texto, duracion=None):
-        self.subtitulo = texto
+    def decir(self, texto, duracion=None, mostrar=True):
+        self.subtitulo = texto if mostrar else ""
         self.subtitulo_t = duracion or clamp(len(texto) * 0.07, 1.8, 6.0)
         self.hablando = self.subtitulo_t
         self._notas = []
@@ -1550,6 +1562,272 @@ def dibujar_icono(surf, nombre, cx, cy, s, t=0.0):
             pygame.draw.line(surf, (246, 176, 74), (cx + s * dx, cy + s * .36),
                              (cx + s * dx, cy + s * .54), max(int(s * .04), 2))
 
+    # ---------------------------------------------------------------- v2
+    elif n == "ancla":
+        azul = (52, 78, 116)
+        gr = max(int(s * .08), 3)
+        pygame.draw.circle(surf, azul, (int(cx), int(cy - s * .50)), int(s * .13), gr)
+        pygame.draw.line(surf, azul, (cx, cy - s * .37), (cx, cy + s * .50), gr)
+        pygame.draw.line(surf, azul, (cx - s * .22, cy - s * .22),
+                         (cx + s * .22, cy - s * .22), gr)
+        pygame.draw.arc(surf, azul, (cx - s * .50, cy - s * .12, s * 1.0, s * .78),
+                        math.pi + .15, 2 * math.pi - .15, gr)
+        for lado in (-1, 1):
+            pygame.draw.polygon(surf, azul, [
+                (cx + lado * s * .50, cy + s * .26),
+                (cx + lado * s * .26, cy + s * .20),
+                (cx + lado * s * .40, cy + s * .02)])
+
+    elif n == "ala":
+        s = s * 1.3
+        cx, cy = cx + s * .02, cy + s * .08
+        borde = (112, 146, 200)
+        puntos = [(-.62, .34), (-.58, -.10), (-.36, -.42), (-.02, -.60),
+                  (.34, -.62), (.68, -.52), (.58, -.38), (.66, -.26),
+                  (.50, -.18), (.54, -.04), (.36, .00), (.36, .16),
+                  (.18, .14), (.12, .30), (-.08, .24), (-.14, .40),
+                  (-.34, .34), (-.46, .46)]
+        pts = [(cx + s * px, cy + s * py + s * .04) for px, py in puntos]
+        pygame.draw.polygon(surf, (236, 243, 253), pts)
+        pygame.draw.polygon(surf, borde, pts, max(int(s * .045), 2))
+        gr = max(int(s * .03), 2)
+        for ax, ay, bx, by in ((-.40, .06, .40, -.30), (-.30, .14, .46, -.12),
+                               (-.22, .22, .30, .06)):
+            pygame.draw.line(surf, (170, 196, 232),
+                             (cx + s * ax, cy + s * ay), (cx + s * bx, cy + s * by), gr)
+
+    elif n == "escalera":
+        mad = (176, 126, 78)
+        osc = (138, 96, 58)
+        gr = max(int(s * .09), 3)
+        for k in range(6):
+            yy = cy - s * .50 + k * s * .21
+            xx = s * (.27 - .0 * k)
+            pygame.draw.line(surf, osc, (cx - xx + (yy - cy) * -.04, yy),
+                             (cx + xx - (yy - cy) * .04, yy), gr)
+        pygame.draw.line(surf, mad, (cx - s * .30, cy + s * .62),
+                         (cx - s * .22, cy - s * .64), gr + 2)
+        pygame.draw.line(surf, mad, (cx + s * .30, cy + s * .62),
+                         (cx + s * .22, cy - s * .64), gr + 2)
+
+    elif n == "espejo":
+        _elipse(surf, (214, 168, 70), cx, cy - s * .10, s * .42, s * .54)
+        _elipse(surf, (200, 230, 246), cx, cy - s * .10, s * .34, s * .46)
+        pygame.draw.line(surf, C_BLANCO, (cx - s * .20, cy - s * .30),
+                         (cx - s * .04, cy - s * .48), max(int(s * .06), 2))
+        pygame.draw.line(surf, C_BLANCO, (cx - s * .26, cy - s * .12),
+                         (cx - s * .16, cy - s * .24), max(int(s * .04), 2))
+        pygame.draw.rect(surf, (214, 168, 70),
+                         (cx - s * .07, cy + s * .40, s * .14, s * .28),
+                         border_radius=int(s * .05))
+        _elipse(surf, (190, 140, 50), cx, cy + s * .70, s * .13, s * .07)
+
+    elif n == "iceberg":
+        pygame.draw.polygon(surf, (170, 214, 236), [
+            (cx - s * .50, cy + s * .12), (cx + s * .52, cy + s * .12),
+            (cx + s * .34, cy + s * .60), (cx - s * .06, cy + s * .72),
+            (cx - s * .36, cy + s * .50)])
+        pygame.draw.polygon(surf, (246, 250, 255), [
+            (cx - s * .50, cy + s * .12), (cx - s * .26, cy - s * .22),
+            (cx - s * .10, cy - s * .08), (cx + s * .12, cy - s * .58),
+            (cx + s * .34, cy - s * .10), (cx + s * .52, cy + s * .12)])
+        pygame.draw.polygon(surf, (206, 228, 244), [
+            (cx + s * .12, cy - s * .58), (cx + s * .34, cy - s * .10),
+            (cx + s * .52, cy + s * .12), (cx + s * .10, cy + s * .12)])
+        _elipse(surf, C_AGUA, cx, cy + s * .14, s * .78, s * .10)
+        _elipse(surf, C_AGUA_CLARA, cx - s * .2, cy + s * .12, s * .30, s * .03)
+
+    elif n == "oreja":
+        piel = (240, 192, 154)
+        _elipse(surf, piel, cx, cy - s * .04, s * .38, s * .56)
+        _elipse(surf, (222, 164, 124), cx + s * .02, cy - s * .04, s * .24, s * .42)
+        _elipse(surf, piel, cx + s * .02, cy - s * .02, s * .13, s * .26)
+        pygame.draw.arc(surf, (200, 140, 104),
+                        (cx - s * .18, cy - s * .30, s * .40, s * .50), .4, 3.6,
+                        max(int(s * .04), 2))
+        _elipse(surf, piel, cx - s * .02, cy + s * .46, s * .13, s * .11)
+        _elipse(surf, (200, 140, 104), cx + s * .02, cy + s * .08, s * .06, s * .07)
+
+    elif n == "olla":
+        gris = (96, 104, 118)
+        pygame.draw.rect(surf, gris, (cx - s * .46, cy - s * .12, s * .92, s * .66),
+                         border_radius=int(s * .16))
+        pygame.draw.rect(surf, (128, 136, 150),
+                         (cx - s * .46, cy - s * .12, s * .92, s * .22),
+                         border_radius=int(s * .10))
+        pygame.draw.rect(surf, (74, 80, 92), (cx - s * .34, cy + s * .18, s * .10, s * .28),
+                         border_radius=int(s * .04))
+        for lado in (-1, 1):
+            pygame.draw.circle(surf, (74, 80, 92),
+                               (int(cx + lado * s * .56), int(cy + s * .02)),
+                               int(s * .11), max(int(s * .05), 2))
+        _elipse(surf, (196, 120, 66), cx, cy - s * .10, s * .38, s * .07)
+        for i, dx in enumerate((-.18, .04, .24)):
+            pygame.draw.arc(surf, (214, 224, 232),
+                            (cx + s * dx - s * .07, cy - s * .62 +
+                             math.sin(t * 2 + i) * s * .03, s * .18, s * .40),
+                            0.4, 3.2, max(int(s * .04), 2))
+
+    elif n == "unia":
+        piel = (240, 192, 154)
+        pygame.draw.rect(surf, piel, (cx - s * .30, cy - s * .50, s * .60, s * 1.12),
+                         border_top_left_radius=int(s * .30),
+                         border_top_right_radius=int(s * .30))
+        pygame.draw.rect(surf, (250, 214, 214),
+                         (cx - s * .20, cy - s * .42, s * .40, s * .46),
+                         border_top_left_radius=int(s * .20),
+                         border_top_right_radius=int(s * .20),
+                         border_bottom_left_radius=int(s * .06),
+                         border_bottom_right_radius=int(s * .06))
+        pygame.draw.line(surf, C_BLANCO, (cx - s * .10, cy - s * .30),
+                         (cx - s * .10, cy - s * .08), max(int(s * .05), 2))
+        pygame.draw.arc(surf, (214, 160, 124), (cx - s * .22, cy + s * .14, s * .44, s * .14),
+                        3.4, 6.0, max(int(s * .03), 2))
+
+    elif n == "pata":
+        cafe = (150, 102, 70)
+        _elipse(surf, cafe, cx, cy + s * .22, s * .36, s * .30)
+        _elipse(surf, (176, 126, 92), cx - s * .08, cy + s * .14, s * .16, s * .12)
+        for dx, dy, rx, ry in ((-.46, -.12, .13, .18), (-.17, -.40, .13, .19),
+                               (.17, -.40, .13, .19), (.46, -.12, .13, .18)):
+            _elipse(surf, cafe, cx + s * dx, cy + s * dy, s * rx, s * ry)
+
+    elif n == "papa":
+        _elipse(surf, (176, 128, 80), cx + s * .02, cy + s * .06, s * .60, s * .46)
+        _elipse(surf, (206, 162, 104), cx, cy, s * .58, s * .44)
+        _elipse(surf, (216, 174, 118), cx - s * .18, cy - s * .14, s * .22, s * .12)
+        for dx, dy in ((-.22, .06), (.14, -.10), (.26, .16), (-.04, .22)):
+            _elipse(surf, (150, 106, 66), cx + s * dx, cy + s * dy, s * .05, s * .035)
+
+    elif n == "topo":
+        _elipse(surf, (120, 82, 56), cx, cy + s * .48, s * .70, s * .20)
+        _elipse(surf, (92, 80, 94), cx, cy + s * .02, s * .46, s * .44)
+        _elipse(surf, (92, 80, 94), cx - s * .32, cy - s * .36, s * .11, s * .11)
+        _elipse(surf, (92, 80, 94), cx + s * .32, cy - s * .36, s * .11, s * .11)
+        _elipse(surf, (158, 140, 150), cx, cy + s * .14, s * .24, s * .18)
+        _elipse(surf, (240, 150, 164), cx, cy + s * .06, s * .10, s * .07)
+        for dx in (-.20, .20):
+            pygame.draw.circle(surf, C_BLANCO, (int(cx + s * dx), int(cy - s * .10)),
+                               max(int(s * .05), 2))
+            pygame.draw.circle(surf, C_TEXTO, (int(cx + s * dx), int(cy - s * .10)),
+                               max(int(s * .025), 1))
+        for dx in (-.42, .42):
+            _elipse(surf, (240, 170, 176), cx + s * dx, cy + s * .34, s * .10, s * .08)
+
+    elif n == "nota":
+        tinta = (44, 56, 100)
+        _elipse(surf, tinta, cx - s * .30, cy + s * .42, s * .20, s * .15)
+        _elipse(surf, tinta, cx + s * .30, cy + s * .32, s * .20, s * .15)
+        gr = max(int(s * .07), 3)
+        pygame.draw.line(surf, tinta, (cx - s * .12, cy + s * .40), (cx - s * .12, cy - s * .50), gr)
+        pygame.draw.line(surf, tinta, (cx + s * .48, cy + s * .30), (cx + s * .48, cy - s * .60), gr)
+        pygame.draw.polygon(surf, tinta, [
+            (cx - s * .12, cy - s * .50), (cx + s * .48, cy - s * .62),
+            (cx + s * .48, cy - s * .40), (cx - s * .12, cy - s * .28)])
+
+    elif n == "seta":
+        pygame.draw.rect(surf, (246, 234, 212), (cx - s * .20, cy - s * .02, s * .40, s * .62),
+                         border_radius=int(s * .10))
+        pygame.draw.rect(surf, (226, 210, 182), (cx + s * .06, cy + s * .04, s * .12, s * .54),
+                         border_radius=int(s * .05))
+        puntos = [(cx + math.cos(math.radians(a)) * s * .64,
+                   cy + s * .04 - math.sin(math.radians(a)) * s * .54)
+                  for a in range(0, 181, 10)]
+        pygame.draw.polygon(surf, (220, 66, 66), puntos)
+        _elipse(surf, (240, 232, 214), cx, cy + s * .05, s * .64, s * .05)
+        for dx, dy, r in ((-.28, -.18, .10), (.06, -.34, .12), (.34, -.12, .09),
+                          (-.04, -.06, .07)):
+            pygame.draw.circle(surf, C_BLANCO, (int(cx + s * dx), int(cy + s * dy)),
+                               max(int(s * r), 2))
+
+    elif n == "pila":
+        pygame.draw.rect(surf, (74, 82, 96), (cx - s * .30, cy - s * .44, s * .60, s * 1.00),
+                         border_radius=int(s * .08))
+        pygame.draw.rect(surf, (160, 168, 180), (cx - s * .12, cy - s * .58, s * .24, s * .16),
+                         border_radius=int(s * .04))
+        pygame.draw.rect(surf, (240, 176, 54), (cx - s * .30, cy - s * .10, s * .60, s * .46))
+        pygame.draw.polygon(surf, C_BLANCO, [
+            (cx + s * .04, cy - s * .06), (cx - s * .12, cy + s * .14),
+            (cx - s * .01, cy + s * .14), (cx - s * .05, cy + s * .34),
+            (cx + s * .13, cy + s * .08), (cx + s * .02, cy + s * .08)])
+        gr = max(int(s * .045), 2)
+        pygame.draw.line(surf, C_BLANCO, (cx - s * .10, cy - s * .30), (cx + s * .10, cy - s * .30), gr)
+        pygame.draw.line(surf, C_BLANCO, (cx, cy - s * .40), (cx, cy - s * .20), gr)
+
+    elif n == "loma":
+        _elipse(surf, C_DORADO, cx - s * .42, cy - s * .40, s * .16, s * .16)
+        _elipse(surf, C_BLANCO, cx + s * .34, cy - s * .38, s * .22, s * .09)
+        _elipse(surf, C_BLANCO, cx + s * .46, cy - s * .44, s * .14, s * .08)
+        pygame.draw.polygon(surf, (104, 170, 86), [
+            (cx + math.cos(math.radians(a)) * s * .86 - s * .16,
+             cy + s * .50 - math.sin(math.radians(a)) * s * .52)
+            for a in range(0, 181, 10)])
+        pygame.draw.polygon(surf, (132, 196, 104), [
+            (cx + math.cos(math.radians(a)) * s * .60 + s * .30,
+             cy + s * .50 - math.sin(math.radians(a)) * s * .34)
+            for a in range(0, 181, 10)])
+        pygame.draw.rect(surf, (104, 170, 86), (cx - s * .86 - s * .16, cy + s * .50,
+                                                 s * 1.72, s * .10))
+        pygame.draw.line(surf, C_TRONCO, (cx - s * .34, cy + s * .02), (cx - s * .34, cy - s * .18),
+                         max(int(s * .05), 2))
+        pygame.draw.circle(surf, (64, 132, 74), (int(cx - s * .34), int(cy - s * .26)), int(s * .13))
+
+    elif n == "lana":
+        rosa = (232, 112, 142)
+        r = s * .46
+        pygame.draw.lines(surf, rosa, False, [
+            (cx + s * .30, cy + s * .34), (cx + s * .50, cy + s * .56),
+            (cx + s * .70, cy + s * .46), (cx + s * .80, cy + s * .66)],
+            max(int(s * .06), 3))
+        pygame.draw.circle(surf, rosa, (int(cx), int(cy)), int(r))
+        for grados, col, gr in ((35, (196, 78, 112), .04), (-40, (246, 156, 182), .035)):
+            th = math.radians(grados)
+            ux, uy = math.cos(th), math.sin(th)
+            nx, ny = -uy, ux
+            for k in range(-3, 4):
+                d = k * r * .27
+                hl = math.sqrt(max(r * r - d * d, 0)) * .96
+                pygame.draw.line(surf, col,
+                                 (cx + nx * d - ux * hl, cy + ny * d - uy * hl),
+                                 (cx + nx * d + ux * hl, cy + ny * d + uy * hl),
+                                 max(int(s * gr), 2))
+        pygame.draw.circle(surf, (246, 156, 182), (int(cx), int(cy)), int(r), max(int(s * .035), 2))
+
+    elif n == "moneda":
+        _elipse(surf, (196, 140, 30), cx, cy + s * .05, s * .52, s * .52)
+        pygame.draw.circle(surf, (250, 204, 70), (int(cx), int(cy)), int(s * .52))
+        pygame.draw.circle(surf, (226, 164, 40), (int(cx), int(cy)), int(s * .40), max(int(s * .04), 2))
+        dibujar_estrella(surf, cx, cy, s * .26, s * .11, (226, 164, 40), t * .4)
+        pygame.draw.arc(surf, (255, 240, 170), (cx - s * .46, cy - s * .46, s * .92, s * .92),
+                        2.2, 3.2, max(int(s * .05), 2))
+
+    elif n == "domino":
+        pygame.draw.rect(surf, (60, 60, 70), (cx - s * .32, cy - s * .62, s * .64, s * 1.24),
+                         border_radius=int(s * .12))
+        pygame.draw.rect(surf, (250, 248, 240), (cx - s * .29, cy - s * .59, s * .58, s * 1.18),
+                         border_radius=int(s * .10))
+        pygame.draw.line(surf, (60, 60, 70), (cx - s * .22, cy), (cx + s * .22, cy),
+                         max(int(s * .04), 2))
+        rp = max(int(s * .065), 2)
+        for dx, dy in ((-.14, -.44), (0, -.30), (.14, -.16)):
+            pygame.draw.circle(surf, (40, 40, 50), (int(cx + s * dx), int(cy + s * dy)), rp)
+        for dx, dy in ((-.14, .16), (.14, .16), (-.14, .44), (.14, .44), (0, .30)):
+            pygame.draw.circle(surf, (40, 40, 50), (int(cx + s * dx), int(cy + s * dy)), rp)
+
+    elif n == "paleta":
+        pygame.draw.rect(surf, (214, 176, 120), (cx - s * .08, cy + s * .10, s * .16, s * .56),
+                         border_radius=int(s * .05))
+        pygame.draw.rect(surf, (255, 138, 160), (cx - s * .30, cy - s * .64, s * .60, s * .80),
+                         border_top_left_radius=int(s * .30),
+                         border_top_right_radius=int(s * .30),
+                         border_bottom_left_radius=int(s * .08),
+                         border_bottom_right_radius=int(s * .08))
+        pygame.draw.rect(surf, (255, 190, 90), (cx - s * .30, cy - s * .12, s * .60, s * .28),
+                         border_bottom_left_radius=int(s * .08),
+                         border_bottom_right_radius=int(s * .08))
+        pygame.draw.line(surf, (255, 226, 232), (cx - s * .18, cy - s * .50), (cx - s * .18, cy - s * .18),
+                         max(int(s * .05), 2))
+
     else:  # marcador generico
         pygame.draw.circle(surf, C_MORADO, (int(cx), int(cy)), int(s * .5))
 
@@ -1868,22 +2146,30 @@ NIVEL1_ITEMS = [
     ("ABEJA", "abeja", "A"),
     ("ARBOL", "arbol", "A"),
     ("ANILLO", "anillo", "A"),
+    ("ANCLA", "ancla", "A"),
+    ("ALA", "ala", "A"),
     ("ELEFANTE", "elefante", "E"),
     ("ESTRELLA", "estrella", "E"),
     ("ERIZO", "erizo", "E"),
     ("ESCOBA", "escoba", "E"),
+    ("ESCALERA", "escalera", "E"),
+    ("ESPEJO", "espejo", "E"),
     ("IGLU", "iglu", "I"),
     ("IMAN", "iman", "I"),
     ("ISLA", "isla", "I"),
     ("IGUANA", "iguana", "I"),
+    ("ICEBERG", "iceberg", "I"),
     ("OSO", "oso", "O"),
     ("OJO", "ojo", "O"),
     ("OVEJA", "oveja", "O"),
     ("OLA", "ola", "O"),
     ("ORUGA", "oruga", "O"),
+    ("OREJA", "oreja", "O"),
+    ("OLLA", "olla", "O"),
     ("UVAS", "uvas", "U"),
     ("UNO", "uno", "U"),
     ("UNICORNIO", "unicornio", "U"),
+    ("UÑA", "unia", "U"),
 ]
 
 
@@ -1932,6 +2218,15 @@ PALABRAS_2_SILABAS = [
     ("DADO", "dado", ["DA", "DO"]),
     ("NIDO", "nido", ["NI", "DO"]),
     ("LATA", "lata", ["LA", "TA"]),
+    ("ALA", "ala", ["A", "LA"]),
+    ("PATA", "pata", ["PA", "TA"]),
+    ("PAPA", "papa", ["PA", "PA"]),
+    ("TOPO", "topo", ["TO", "PO"]),
+    ("NOTA", "nota", ["NO", "TA"]),
+    ("SETA", "seta", ["SE", "TA"]),
+    ("PILA", "pila", ["PI", "LA"]),
+    ("LOMA", "loma", ["LO", "MA"]),
+    ("LANA", "lana", ["LA", "NA"]),
 ]
 
 PALABRAS_3_SILABAS = [
@@ -1939,6 +2234,10 @@ PALABRAS_3_SILABAS = [
     ("MALETA", "maleta", ["MA", "LE", "TA"]),
     ("TOMATE", "tomate", ["TO", "MA", "TE"]),
     ("PALOMA", "paloma", ["PA", "LO", "MA"]),
+    ("MONEDA", "moneda", ["MO", "NE", "DA"]),
+    ("DOMINO", "domino", ["DO", "MI", "NO"]),
+    ("PALETA", "paleta", ["PA", "LE", "TA"]),
+    ("PATITO", "pato", ["PA", "TI", "TO"]),
 ]
 
 # Palabras de ampliacion: usan z y r, fuera del grupo inicial de consonantes.
@@ -1975,7 +2274,8 @@ def distractores_silaba(objetivo, cantidad, evitar=()):
 
 FONEMAS = {
     "A": "aaa", "E": "eee", "I": "iii", "O": "ooo", "U": "uuu",
-    "M": "mmm", "P": "p", "S": "sss", "L": "lll",
+    "M": "mmm", "P": "p", "S": "sss", "L": "lll", "T": "t", "D": "d",
+    "N": "nnn",
 }
 
 ELOGIOS = [
@@ -1983,6 +2283,276 @@ ELOGIOS = [
     "Muy bien, el bosque recupera su voz.",
     "Lo lograste, sigue asi pequeno explorador.",
     "Perfecto, ese es el sonido que buscabamos.",
+]
+
+# --------------------------------------------------------------------------
+#  NIVELES DE COMPRENSION LECTORA (4 a 9)
+#  Aqui los textos llevan ortografia completa (tildes, enes, signos): el nino
+#  esta leyendo, no solo oyendo sonidos.
+# --------------------------------------------------------------------------
+TOTAL_NIVELES = 9
+
+# Palabras del juego que se escriben con tilde o con enie (clave = icono).
+ACENTOS = {"arana": "araña", "avion": "avión", "iman": "imán", "arbol": "árbol",
+           "unia": "uña", "domino": "dominó", "iglu": "iglú"}
+
+
+def palabra_visible(icono):
+    return ACENTOS.get(icono, icono)
+
+
+def palabras_de_lectura():
+    """Todas las palabras ilustradas del juego, sin repetir el dibujo."""
+    vistos, res = set(), []
+    for it in (NIVEL1_ITEMS + PALABRAS_2_SILABAS + PALABRAS_3_SILABAS
+               + PALABRAS_OPCIONALES):
+        if it[1] not in vistos:
+            vistos.add(it[1])
+            res.append(it[1])
+    return res
+
+
+def distractores_lectura(icono, cantidad):
+    """Dibujos distractores: de preferencia empiezan con la misma letra, para
+    que el nino tenga que leer la palabra completa y no adivinar."""
+    todos = [p for p in palabras_de_lectura() if p != icono]
+    ini = palabra_visible(icono)[0]
+    mismos = [p for p in todos if palabra_visible(p)[0] == ini]
+    otros = [p for p in todos if p not in mismos]
+    random.shuffle(mismos)
+    random.shuffle(otros)
+    return (mismos + otros)[:cantidad]
+
+
+# --- Nivel 5: frase incompleta (frase, respuesta, distractores, dibujo) ----
+FRASES_INCOMPLETAS = [
+    ("El ___ nada en el río.", "pato", ["gato", "mono"], "pato"),
+    ("La ___ alumbra de noche.", "luna", ["lupa", "lana"], "luna"),
+    ("La ___ vuela en el cielo.", "paloma", ["pelota", "maleta"], "paloma"),
+    ("Pateo la ___ en la cancha.", "pelota", ["paloma", "maleta"], "pelota"),
+    ("Mamá prepara una rica ___.", "sopa", ["mesa", "pala"], "sopa"),
+    ("El ___ come bananos en el árbol.", "mono", ["mano", "moto"], "mono"),
+    ("La ___ hace miel dulce.", "abeja", ["oveja", "araña"], "abeja"),
+    ("Guardo mi ropa en la ___.", "maleta", ["mesa", "lata"], "maleta"),
+    ("El pájaro hace su ___ en el árbol.", "nido", ["dado", "lado"], "nido"),
+    ("Con la ___ veo cosas muy pequeñas.", "lupa", ["luna", "pala"], "lupa"),
+    ("Cavo la tierra con la ___.", "pala", ["pila", "lata"], "pala"),
+    ("El ___ habla y repite palabras.", "loro", ["lobo", "lodo"], "loro"),
+    ("Hago mi tarea sobre la ___.", "mesa", ["masa", "misa"], "mesa"),
+    ("El tomate es de color ___.", "rojo", ["azul", "negro"], "tomate"),
+    ("Me gusta comer ___ moradas.", "uvas", ["uñas", "ovejas"], "uvas"),
+    ("La ___ teje su tela.", "araña", ["abeja", "oveja"], "arana"),
+    ("El ___ salta en el charco.", "sapo", ["pato", "puma"], "sapo"),
+]
+
+# --- Nivel 6: ordena la oracion (oracion, dibujo) --------------------------
+ORACIONES = [
+    ("El pato nada en el río.", "pato"),
+    ("La luna sale de noche.", "luna"),
+    ("Mi mamá cocina una sopa.", "sopa"),
+    ("El mono come un banano.", "mono"),
+    ("La abeja hace miel.", "abeja"),
+    ("Yo juego con mi pelota.", "pelota"),
+    ("El oso duerme en la cueva.", "oso"),
+    ("La paloma vuela muy alto.", "paloma"),
+    ("Dibujo un mapa del bosque.", "mapa"),
+    ("Mi papá lleva la maleta.", "maleta"),
+    ("El sapo salta en el charco.", "sapo"),
+    ("La araña teje su tela.", "arana"),
+    ("Veo una estrella en el cielo.", "estrella"),
+    ("El loro repite mis palabras.", "loro"),
+    ("Pedro come uvas moradas.", "uvas"),
+    ("Mi tía barre con la escoba.", "escoba"),
+]
+
+# --- Nivel 7: cuentos cortos (comprension literal) -------------------------
+# preguntas: (pregunta, respuesta correcta, [dos distractores])
+CUENTOS_CORTOS = [
+    {"titulo": "El pato Pepe", "icono": "pato",
+     "texto": "Pepe es un pato amarillo. Todas las mañanas va al río con su "
+              "mamá. Allí nada y juega con los peces. Cuando llega la noche, "
+              "vuelve a su nido y se duerme.",
+     "preguntas": [
+         ("¿De qué color es Pepe?", "Amarillo", ["Blanco", "Verde"]),
+         ("¿Con quién va Pepe al río?", "Con su mamá", ["Con su papá", "Con su abuela"]),
+         ("¿Qué hace Pepe cuando llega la noche?", "Se duerme en su nido",
+          ["Juega con los peces", "Va a la escuela"]),
+     ]},
+    {"titulo": "La abeja Lola", "icono": "abeja",
+     "texto": "Lola es una abeja trabajadora. Vuela de flor en flor y recoge "
+              "polen. Con el polen hace miel dulce para su colmena. La colmena "
+              "está en un árbol grande.",
+     "preguntas": [
+         ("¿Qué recoge Lola de las flores?", "Polen", ["Agua", "Piedras"]),
+         ("¿Qué hace Lola con el polen?", "Miel dulce", ["Sopa caliente", "Pan con queso"]),
+         ("¿Dónde está la colmena?", "En un árbol grande", ["En una casa", "En el río"]),
+     ]},
+    {"titulo": "El oso Tomás", "icono": "oso",
+     "texto": "Tomás es un oso que vive en la montaña. Un día tuvo mucha "
+              "hambre y salió a buscar frutas. Encontró un árbol lleno de "
+              "moras rojas. Comió muchas y volvió a su cueva muy contento.",
+     "preguntas": [
+         ("¿Dónde vive Tomás?", "En la montaña", ["En el mar", "En la ciudad"]),
+         ("¿Qué salió a buscar Tomás?", "Frutas", ["Peces", "Piedras"]),
+         ("¿Cómo volvió Tomás a su cueva?", "Muy contento", ["Muy triste", "Muy enojado"]),
+     ]},
+    {"titulo": "El sapo y la luna", "icono": "sapo",
+     "texto": "Una noche, el sapo Sapín salió de su charco. Miró al cielo y "
+              "vio la luna grande y redonda. Quiso tocarla, pero estaba muy "
+              "lejos. Entonces se sentó y le cantó una canción.",
+     "preguntas": [
+         ("¿Quién salió del charco?", "El sapo Sapín", ["El pato Pepe", "La abeja Lola"]),
+         ("¿Cómo era la luna?", "Grande y redonda", ["Pequeña y cuadrada", "Roja y fría"]),
+         ("¿Qué hizo Sapín al final?", "Le cantó una canción",
+          ["Tocó la luna", "Se fue a dormir"]),
+     ]},
+    {"titulo": "Mi escuela", "icono": "pelota",
+     "texto": "Me llamo Camila y estudio en segundo grado. Mi escuela tiene "
+              "un jardín con muchas flores. En el recreo juego a saltar la "
+              "cuerda con mis amigas. Me gusta mucho mi escuela.",
+     "preguntas": [
+         ("¿En qué grado estudia Camila?", "En segundo", ["En primero", "En tercero"]),
+         ("¿Qué hay en el jardín de la escuela?", "Flores", ["Pelotas", "Mesas"]),
+         ("¿A qué juega Camila en el recreo?", "A saltar la cuerda",
+          ["Al fútbol", "A las escondidas"]),
+     ]},
+    {"titulo": "El loro Lalo", "icono": "loro",
+     "texto": "Lalo es un loro verde que vive en una casa. Repite todo lo "
+              "que oye. Una mañana dijo: «¡Buenos días!». Toda la familia se "
+              "rio y le dio una fruta.",
+     "preguntas": [
+         ("¿De qué color es Lalo?", "Verde", ["Azul", "Negro"]),
+         ("¿Qué hace Lalo con lo que oye?", "Lo repite", ["Lo escribe", "Lo guarda"]),
+         ("¿Qué le dio la familia a Lalo?", "Una fruta", ["Un libro", "Una pelota"]),
+     ]},
+]
+
+# --- Nivel 8: el gran cuento (orden, inferencia, idea principal) -----------
+GRAN_CUENTOS = [
+    {"titulo": "La hormiga Hilda", "icono": None,
+     "texto": "En un día de lluvia, la hormiga Hilda salió de su hormiguero "
+              "con una hoja grande. Su amiga la cigarra le preguntó: «¿Por qué "
+              "trabajas tanto?». «Guardo comida para el invierno», respondió "
+              "Hilda. La cigarra se rio y siguió cantando. Meses después llegó "
+              "el frío y la cigarra no tenía qué comer. Hilda compartió su "
+              "comida con ella.",
+     "preguntas": [
+         ("¿Qué hizo Hilda primero?", "Salió de su hormiguero",
+          ["Compartió su comida", "Se rio y siguió cantando"]),
+         ("¿Por qué guardaba comida Hilda?", "Porque venía el invierno",
+          ["Porque tenía mucho sueño", "Porque quería jugar"]),
+         ("¿Cómo es Hilda?", "Trabajadora y generosa",
+          ["Perezosa y egoísta", "Miedosa y callada"]),
+         ("¿Qué enseña este cuento?", "Hay que prepararse y compartir",
+          ["Hay que cantar todo el día", "Hay que salir cuando llueve"]),
+     ]},
+    {"titulo": "El río limpio", "icono": "ola",
+     "texto": "Los niños de la escuela caminaron hasta el río. Vieron bolsas "
+              "y botellas flotando en el agua. Los peces estaban tristes "
+              "porque el agua estaba sucia. Entonces los niños recogieron toda "
+              "la basura y la llevaron a la caneca. Al día siguiente, el agua "
+              "estaba más limpia y los peces nadaban felices.",
+     "preguntas": [
+         ("¿Qué vieron los niños en el río?", "Bolsas y botellas",
+          ["Flores y hojas", "Barcos y canoas"]),
+         ("¿Por qué estaban tristes los peces?", "Porque el agua estaba sucia",
+          ["Porque tenían frío", "Porque no había piedras"]),
+         ("¿Qué pasó después de recoger la basura?", "El agua quedó más limpia",
+          ["Se secó el río", "Los peces se fueron lejos"]),
+         ("¿Cuál es el mejor título para este cuento?", "Los niños cuidan el río",
+          ["Un paseo en barco", "El pez dormilón"]),
+     ]},
+    {"titulo": "El árbol de mangos", "icono": "arbol",
+     "texto": "Doña Rosa tenía un árbol de mangos en su patio. Cada verano "
+              "regalaba mangos a todos sus vecinos. Un año, el árbol dio muy "
+              "pocos frutos y Rosa se puso triste. Los vecinos llegaron con "
+              "agua y abono para cuidarlo. Al año siguiente, el árbol volvió "
+              "a dar muchos mangos.",
+     "preguntas": [
+         ("¿Qué hacía Rosa cada verano?", "Regalaba mangos",
+          ["Vendía flores", "Pintaba su casa"]),
+         ("¿Por qué se puso triste Rosa?", "Porque el árbol dio pocos frutos",
+          ["Porque se perdió su gato", "Porque llovió mucho"]),
+         ("¿Qué llevaron los vecinos?", "Agua y abono",
+          ["Pintura y tablas", "Pan y leche"]),
+         ("¿Qué enseña este cuento?", "Los buenos vecinos se ayudan",
+          ["Hay que comer muy rápido", "Los árboles no necesitan agua"]),
+     ]},
+    {"titulo": "El viaje de la semilla", "icono": "nido",
+     "texto": "Una semilla pequeña cayó de un árbol. El viento la llevó muy "
+              "lejos y la dejó en la tierra húmeda. Llovió varios días y la "
+              "semilla se hinchó. Primero salió una raíz y después un tallo "
+              "verde. Con el tiempo se convirtió en un árbol alto, y los "
+              "pájaros hicieron allí sus nidos.",
+     "preguntas": [
+         ("¿Quién llevó la semilla lejos?", "El viento", ["Un pájaro", "El río"]),
+         ("¿Qué salió primero de la semilla?", "Una raíz", ["Un nido", "Una flor"]),
+         ("¿Por qué creció la semilla?", "Porque recibió agua de la lluvia",
+          ["Porque estaba en un lugar seco", "Porque la tapó una piedra"]),
+         ("¿Qué pasó al final?", "Los pájaros hicieron nidos en el árbol",
+          ["La semilla se secó", "El viento se llevó el árbol"]),
+     ]},
+    {"titulo": "Camilo y Chispa", "icono": None,
+     "texto": "Camilo perdió a su perro Chispa en el parque. Lo buscó detrás "
+              "de los árboles y debajo de las bancas, pero no lo encontró. Se "
+              "sentó a llorar. De repente escuchó un ladrido y vio a Chispa "
+              "corriendo hacia él con la cola moviéndose. Camilo lo abrazó y "
+              "sonrió.",
+     "preguntas": [
+         ("¿Dónde perdió Camilo a su perro?", "En el parque",
+          ["En la escuela", "En el río"]),
+         ("¿Cómo se sintió Camilo al perder a Chispa?", "Triste",
+          ["Contento", "Aburrido"]),
+         ("¿Qué pasó después de que Camilo se sentó a llorar?", "Escuchó un ladrido",
+          ["Se fue a su casa", "Compró un helado"]),
+         ("¿Por qué sonrió Camilo al final?", "Porque encontró a su perro",
+          ["Porque ganó un juego", "Porque llegó a la escuela"]),
+     ]},
+]
+
+# --- Nivel 9: verdadero o falso --------------------------------------------
+# afirmaciones: (frase, es_verdadera)
+VERDAD_FALSO = [
+    {"icono": "oso",
+     "texto": "El oso vive en la montaña. Le gusta comer frutas y miel. En "
+              "invierno duerme muchos días en su cueva.",
+     "afirmaciones": [("El oso duerme en su cueva en invierno.", True),
+                      ("El oso vive en el mar.", False)]},
+    {"icono": "abeja",
+     "texto": "La abeja visita las flores. Con el polen hace miel. Vive en "
+              "una colmena con muchas abejas.",
+     "afirmaciones": [("La abeja hace miel con el polen.", True),
+                      ("La abeja vive sola, lejos de las demás.", False)]},
+    {"icono": "mesa",
+     "texto": "Mi gato se llama Ñoño. Es negro y tiene los ojos verdes. Le "
+              "gusta dormir sobre la mesa.",
+     "afirmaciones": [("Ñoño tiene los ojos verdes.", True),
+                      ("Ñoño es un gato blanco.", False)]},
+    {"icono": "ola",
+     "texto": "El río nace en la montaña y baja hasta el mar. En él viven "
+              "peces y ranas. Debemos cuidar el agua para que no se acabe.",
+     "afirmaciones": [("En el río viven peces y ranas.", True),
+                      ("El río nace en el mar.", False)]},
+    {"icono": "estrella",
+     "texto": "Hoy es el cumpleaños de Sofía. Su mamá le preparó una torta "
+              "con velas. Sus amigos le cantaron una canción.",
+     "afirmaciones": [("Los amigos le cantaron una canción a Sofía.", True),
+                      ("A la fiesta de Sofía no llegó nadie.", False)]},
+    {"icono": "loro",
+     "texto": "El loro es un ave de colores. Tiene un pico fuerte y curvo. "
+              "Algunos loros pueden repetir palabras.",
+     "afirmaciones": [("Algunos loros repiten palabras.", True),
+                      ("El loro no tiene pico.", False)]},
+    {"icono": "luna",
+     "texto": "La luna no tiene luz propia. Brilla porque el sol la ilumina. "
+              "Por eso la vemos de noche.",
+     "afirmaciones": [("La luna brilla porque el sol la ilumina.", True),
+                      ("La luna tiene luz propia y no necesita al sol.", False)]},
+    {"icono": "uvas",
+     "texto": "En mi escuela hay un huerto. Los niños siembran tomates y "
+              "cebollas. Los riegan todos los días.",
+     "afirmaciones": [("Los niños riegan el huerto todos los días.", True),
+                      ("Los niños no riegan las plantas.", False)]},
 ]
 
 
@@ -2061,7 +2631,7 @@ class EscenaPortada(Escena):
         texto(surf, j.fuentes.titulo, "Palabras Magicas", ANCHO // 2, y + 38,
               (46, 92, 66), sombra=True)
         texto(surf, j.fuentes.chico,
-              "Conciencia fonologica e iniciacion a la lectoescritura  -  Grado 1o",
+              "Lectoescritura y comprensión lectora  -  Grados 1o y 2o",
               ANCHO // 2, y + 92, C_TEXTO_SUAVE)
         dibujar_lina(surf, 250, 470, 150, self.t, boca=j.voz.boca)
         dibujar_burbuja_duende(surf, ANCHO - 230, 450, 120, self.t)
@@ -2075,13 +2645,24 @@ class EscenaPortada(Escena):
 
 # --------------------------------------------------------------- MAPA/SENDEROS
 class EscenaMapa(Escena):
+    # (x, y, nivel, nombre, ayuda). La ruta serpentea: fila 1 de izquierda a
+    # derecha y fila 2 de derecha a izquierda.
+    NODOS = [
+        (190, 262, 1, "Río de Vocales", "Sonidos A E I O U"),
+        (420, 262, 2, "Puente Silábico", "Consonante + vocal"),
+        (650, 262, 3, "Gran Árbol", "Forma palabras"),
+        (880, 262, 4, "Palabra y Dibujo", "Lee y toca el dibujo"),
+        (1110, 262, 5, "Frase Incompleta", "Completa la frase"),
+        (1110, 482, 6, "Pergamino Mágico", "Ordena la oración"),
+        (880, 482, 7, "Cuentos Cortos", "Lee y responde"),
+        (650, 482, 8, "El Gran Cuento", "Piensa y responde"),
+        (420, 482, 9, "Verdad o Mentira", "¿Verdadero o falso?"),
+    ]
+    CURVA = {5: [(1214, 300), (1214, 444)]}      # codo entre las dos filas
+
     def entrar(self):
         j = self.juego
-        self.nodos = [
-            (270, 430, 1, "El Rio de las Vocales", "Sonidos iniciales A E I O U"),
-            (640, 350, 2, "El Puente Silabico", "Une consonante + vocal"),
-            (1010, 430, 3, "El Gran Arbol", "Forma palabras completas"),
-        ]
+        self.nodos = self.NODOS
         self.volver = Boton((30, 30, 150, 54), "Volver", (214, 210, 200),
                             fuente=j.fuentes.chico)
         j.voz.decir("Elige un sendero magico para continuar.", 3.0)
@@ -2109,34 +2690,58 @@ class EscenaMapa(Escena):
         super().update(dt)
         self.volver.update(dt, pygame.mouse.get_pos())
 
+    def _ruta(self):
+        pts = []
+        for x, y, n, _, _ in self.nodos:
+            pts.append((x, y))
+            pts.extend(self.CURVA.get(n, []))
+        return pts
+
+    def _zona(self, surf, fuentes, txt, cx, cy, color):
+        img = fuentes.chico.render(txt, True, C_TEXTO)
+        w = img.get_width() + 44
+        pill = pygame.Surface((w, 40), pygame.SRCALPHA)
+        pygame.draw.rect(pill, color + (210,), (0, 0, w, 40), border_radius=20)
+        surf.blit(pill, (cx - w // 2, cy - 20))
+        surf.blit(img, img.get_rect(center=(cx, cy)))
+
     def dibujar(self, surf):
         j = self.juego
         j.bosque.dibujar(surf)
-        texto(surf, j.fuentes.h1, "Senderos magicos", ANCHO // 2, 90,
+        texto(surf, j.fuentes.h1, "Senderos mágicos", ANCHO // 2, 80,
               (46, 92, 66), sombra=True)
-        pts = [(n[0], n[1]) for n in self.nodos]
-        for i in range(len(pts) - 1):
-            pygame.draw.line(surf, (236, 224, 186), pts[i], pts[i + 1], 12)
-            pygame.draw.line(surf, (206, 188, 148), pts[i], pts[i + 1], 4)
+        self._zona(surf, j.fuentes, "Sonidos y sílabas", 420, 162, (255, 226, 150))
+        self._zona(surf, j.fuentes, "Comprensión lectora", 1000, 162, (255, 200, 160))
+        pts = self._ruta()
+        pygame.draw.lines(surf, (236, 224, 186), False, pts, 12)
+        pygame.draw.lines(surf, (206, 188, 148), False, pts, 4)
         mx, my = pygame.mouse.get_pos()
         for x, y, n, nom, sub in self.nodos:
             abierto = self._desbloqueado(n)
             hov = math.hypot(mx - x, my - y) < 62
             r = 54 + (6 if hov and abierto else 0) + math.sin(self.t * 2 + n) * 3
             pygame.draw.circle(surf, (0, 0, 0, 40), (int(x), int(y + 8)), int(r))
-            col = C_DORADO if abierto else (178, 178, 172)
+            if abierto:
+                col = C_DORADO if n <= 3 else C_NARANJA
+            else:
+                col = (178, 178, 172)
             pygame.draw.circle(surf, mezclar(col, (0, 0, 0), .2), (x, y), int(r))
             pygame.draw.circle(surf, col, (x, y - 4), int(r))
             texto(surf, j.fuentes.h1, str(n), x, y - 6, C_TEXTO)
-            texto(surf, j.fuentes.cuerpo, nom, x, y + 86, C_TEXTO, sombra=True)
-            texto(surf, j.fuentes.mini, sub if abierto else "Bloqueado",
-                  x, y + 114, C_TEXTO_SUAVE)
+            ayuda = sub if abierto else "Bloqueado"
+            ancho_e = max(j.fuentes.chico.size(nom)[0],
+                          j.fuentes.mini.size(ayuda)[0]) + 28
+            etiqueta = pygame.Surface((ancho_e, 54), pygame.SRCALPHA)
+            pygame.draw.rect(etiqueta, (255, 255, 255, 190), (0, 0, ancho_e, 54),
+                             border_radius=18)
+            surf.blit(etiqueta, (x - ancho_e // 2, y + 66))
+            texto(surf, j.fuentes.chico, nom, x, y + 80, C_TEXTO)
+            texto(surf, j.fuentes.mini, ayuda, x, y + 104, C_TEXTO_SUAVE)
             est = j.progreso["estrellas"].get(str(n), 0)
             for i in range(3):
-                col_e = C_DORADO if i < est else (255, 255, 255, 120)
-                dibujar_estrella(surf, x - 32 + i * 32, y + 146, 13, 6,
+                dibujar_estrella(surf, x - 32 + i * 32, y + 132, 13, 6,
                                  C_DORADO if i < est else (206, 206, 200))
-        dibujar_lina(surf, 130, ALTO - 140, 110, self.t, boca=j.voz.boca)
+        dibujar_lina(surf, 120, ALTO - 150, 100, self.t, boca=j.voz.boca)
         self.volver.dibujar(surf, j.fuentes)
 
 
@@ -2151,6 +2756,18 @@ class EscenaIntroNivel(Escena):
            "completar el nombre del animal.",
         3: "El cofre del gran arbol pide palabras completas. Ordena las "
            "silabas para escribirlas.",
+        4: "Las palabras se separaron de sus dibujos. Lee cada palabra y toca "
+           "el dibujo que le corresponde.",
+        5: "Al puente le faltan palabras. Lee la frase y escoge la palabra "
+           "que le da sentido.",
+        6: "El pergamino mágico se rompió y las palabras se mezclaron. Toca "
+           "las palabras en orden para armar la oración.",
+        7: "Lina guarda cuentos muy cortos. Léelos con calma y responde lo "
+           "que dice cada texto.",
+        8: "Este cuento es más largo. Léelo despacio, piensa y responde: "
+           "algunas respuestas hay que pensarlas.",
+        9: "El detective del bosque lee un texto. Decide si la frase que "
+           "sigue es verdadera o falsa.",
     }
 
     def __init__(self, juego, nivel):
@@ -2171,7 +2788,9 @@ class EscenaIntroNivel(Escena):
         if self.saliendo:           # una sola vez: si no, la transicion
             return                  # se reiniciaba en cada fotograma
         self.saliendo = True
-        clases = {1: EscenaNivel1, 2: EscenaNivel2, 3: EscenaNivel3}
+        clases = {1: EscenaNivel1, 2: EscenaNivel2, 3: EscenaNivel3,
+                  4: EscenaNivel4, 5: EscenaNivel5, 6: EscenaNivel6,
+                  7: EscenaNivel7, 8: EscenaNivel8, 9: EscenaNivel9}
         self.juego.ir_a(clases[self.nivel](self.juego))
 
     def update(self, dt):
@@ -2241,23 +2860,27 @@ class EscenaNivelBase(Escena):
     def instruccion(self):
         return ""
 
-    def acierto(self, x, y):
+    def acierto(self, x, y, mensaje=None, espera=1.5):
         j = self.juego
         self.aciertos += 1
         j.fx.tocar("acierto")
         j.particulas.confeti(x, y, 34)
         self.animo_lina = "aplaude"
-        self.mensaje = random.choice(ELOGIOS)
-        self.mensaje_t = 2.4
-        j.voz.decir(self.mensaje, 2.4)
+        self.mensaje = mensaje or random.choice(ELOGIOS)
+        dur = max(2.4, espera + .9)
+        self.mensaje_t = dur
+        j.voz.decir(self.mensaje, dur)
         self.estrellas_vol.append({"x": x, "y": y, "t": 0.0})
-        self.bloqueo = 1.5
+        self.bloqueo = espera
+
+    def texto_error(self, objetivo):
+        return pista_error(objetivo)
 
     def error(self, objetivo):
         j = self.juego
         self.errores += 1
         j.fx.tocar("suave")
-        self.mensaje = pista_error(objetivo)
+        self.mensaje = self.texto_error(objetivo)
         self.mensaje_t = 3.0
         j.voz.decir(self.mensaje, 3.0)
 
@@ -2384,7 +3007,7 @@ class Burbujita:
 
 class EscenaNivel1(EscenaNivelBase):
     NUM, NOMBRE = 1, "Nivel 1 - El Rio de las Vocales"
-    TOTAL_RONDAS = 5
+    TOTAL_RONDAS = 8
 
     def entrar(self):
         self.tarjeta = Tarjeta(ANCHO // 2, 250, 250, 250)
@@ -2507,7 +3130,7 @@ class Piedra:
 
 class EscenaNivel2(EscenaNivelBase):
     NUM, NOMBRE = 2, "Nivel 2 - El Puente Silabico"
-    TOTAL_RONDAS = 4
+    TOTAL_RONDAS = 6
 
     def entrar(self):
         self.tarjeta = Tarjeta(ANCHO // 2, 210, 210, 210)
@@ -2675,14 +3298,15 @@ class Bloque:
 
 class EscenaNivel3(EscenaNivelBase):
     NUM, NOMBRE = 3, "Nivel 3 - El Gran Arbol de las Palabras"
-    TOTAL_RONDAS = 4
+    TOTAL_RONDAS = 6
 
     def entrar(self):
         self.tarjeta = Tarjeta(250, 300, 230, 230)
         # mezcla palabras de dos y de tres silabas, en orden aleatorio
-        dos = random.sample(PALABRAS_2_SILABAS, max(self.TOTAL_RONDAS - 2, 1))
-        tres = random.sample(PALABRAS_3_SILABAS,
-                             min(2, len(PALABRAS_3_SILABAS)))
+        n_tres = min(self.TOTAL_RONDAS // 2, len(PALABRAS_3_SILABAS))
+        dos = random.sample(PALABRAS_2_SILABAS,
+                            max(self.TOTAL_RONDAS - n_tres, 1))
+        tres = random.sample(PALABRAS_3_SILABAS, n_tres)
         self.pool = (dos + tres)[:self.TOTAL_RONDAS]
         random.shuffle(self.pool)
         self.bloques = []
@@ -2847,6 +3471,704 @@ class EscenaNivel3(EscenaNivelBase):
         self.dibujar_guia(surf, 118, ALTO - 110)
 
 
+# ==========================================================================
+#  NIVELES 4 A 9: COMPRENSION LECTORA
+# ==========================================================================
+def lineas_envueltas(fuente, txt, ancho_max):
+    """Divide un texto en renglones que caben en ancho_max."""
+    lineas = []
+    for parrafo in txt.split("\n"):
+        actual = ""
+        for p in parrafo.split(" "):
+            prueba = (actual + " " + p).strip()
+            if not actual or fuente.size(prueba)[0] <= ancho_max:
+                actual = prueba
+            else:
+                lineas.append(actual)
+                actual = p
+        lineas.append(actual)
+    return lineas
+
+
+def texto_izquierda(surf, fuente, lineas, x, y, col=C_TEXTO, interlineado=8):
+    """Dibuja renglones alineados a la izquierda (para leer con comodidad)."""
+    alto = fuente.get_height() + interlineado
+    for i, ln in enumerate(lineas):
+        texto(surf, fuente, ln, x, y + i * alto, col, centro=False)
+    return len(lineas) * alto
+
+
+class Opcion:
+    """Boton de respuesta de los niveles de lectura."""
+
+    def __init__(self, rect, etiqueta, correcta, color=C_CREMA):
+        self.rect = pygame.Rect(rect)
+        self.etiqueta = etiqueta
+        self.correcta = correcta
+        self.color = color
+        self.estado = "normal"          # normal | bien | mal
+        self.sacudida = 0.0
+        self.hover = False
+
+    def update(self, dt, pos):
+        self.hover = self.estado == "normal" and self.rect.collidepoint(pos)
+        if self.sacudida > 0:
+            self.sacudida -= dt
+
+    def marca(self, surf, r):
+        """Visto verde o equis roja en la esquina del boton."""
+        cx, cy = r.right - 20, r.top + 20
+        if self.estado == "bien":
+            pygame.draw.circle(surf, C_VERDE_OK, (cx, cy), 17)
+            pygame.draw.lines(surf, C_BLANCO, False,
+                              [(cx - 8, cy), (cx - 2, cy + 7), (cx + 9, cy - 7)], 4)
+        elif self.estado == "mal":
+            pygame.draw.circle(surf, (214, 112, 100), (cx, cy), 17)
+            pygame.draw.line(surf, C_BLANCO, (cx - 7, cy - 7), (cx + 7, cy + 7), 4)
+            pygame.draw.line(surf, C_BLANCO, (cx - 7, cy + 7), (cx + 7, cy - 7), 4)
+
+    def dibujar(self, surf, fuente, t):
+        r = self.rect.copy()
+        if self.sacudida > 0:
+            r.x += int(math.sin(t * 34) * 8)
+        if self.hover:
+            r = r.inflate(10, 8)
+        if self.estado == "bien":
+            base, borde = (204, 240, 210), C_VERDE_OK
+        elif self.estado == "mal":
+            base, borde = (234, 218, 214), (206, 122, 112)
+        else:
+            base, borde = self.color, C_DORADO
+        sombra = pygame.Surface((r.w + 12, r.h + 18), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (6, 12, r.w, r.h), border_radius=24)
+        surf.blit(sombra, (r.x - 6, r.y - 6))
+        pygame.draw.rect(surf, base, r, border_radius=24)
+        pygame.draw.rect(surf, borde, r, 5, border_radius=24)
+        col = C_TEXTO if self.estado != "mal" else (150, 140, 136)
+        texto_envuelto(surf, fuente, self.etiqueta, r.centerx, r.centery - 2,
+                       r.w - 40, col)
+        self.marca(surf, r)
+
+
+class EscenaLecturaBase(EscenaNivelBase):
+    """Base de los niveles de comprension: opciones tocables, boton para
+    escuchar el texto y a Lina pequena en la esquina (los mensajes salen como
+    subtitulo, para no tapar el texto que el nino esta leyendo)."""
+
+    LEER_TEXTO = False
+
+    def entrar(self):
+        j = self.juego
+        self.opciones = []
+        self.btn_leer = Boton((ANCHO - 446, 24, 210, 50), "Escuchar texto",
+                              C_AGUA_CLARA, fuente=j.fuentes.chico)
+        self.btn_leer.habilitado = self.LEER_TEXTO
+        super().entrar()
+
+    # -- ganchos para cada nivel ------------------------------------------
+    def texto_error(self, objetivo):
+        return "Casi lo logras. Lee otra vez con calma y prueba de nuevo."
+
+    def texto_a_leer(self):
+        return ""
+
+    def tocar_fondo(self, pos):
+        pass
+
+    def al_acertar(self, op):
+        self.acierto(op.rect.centerx, op.rect.centery)
+
+    def al_fallar(self, op):
+        self.error(None)
+
+    # -- comun ------------------------------------------------------------
+    def leer_texto(self):
+        txt = self.texto_a_leer()
+        if txt:
+            self.juego.voz.decir(txt, clamp(len(txt) * .075, 3.0, 40.0), False)
+
+    def elegir(self, op):
+        if op.estado != "normal":
+            return
+        if op.correcta:
+            op.estado = "bien"
+            self.al_acertar(op)
+        else:
+            op.estado = "mal"
+            op.sacudida = .45
+            self.al_fallar(op)
+
+    def ajustar_fuente(self, etiquetas, ancho, max_lineas=2):
+        """La fuente mas grande con la que todas las respuestas caben."""
+        f = self.juego.fuentes
+        for fuente in (f.h2, f.cuerpo, f.chico):
+            if all(len(lineas_envueltas(fuente, e, ancho - 44)) <= max_lineas
+                   for e in etiquetas):
+                return fuente
+        return f.chico
+
+    def evento(self, ev):
+        super().evento(ev)
+        if self.bloqueo > 0:
+            return
+        if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
+            if self.LEER_TEXTO and self.btn_leer.click(ev.pos):
+                self.juego.fx.tocar("click")
+                self.leer_texto()
+                return
+            for op in self.opciones:
+                if op.estado == "normal" and op.rect.collidepoint(ev.pos):
+                    self.elegir(op)
+                    return
+            self.tocar_fondo(ev.pos)
+        if ev.type == pygame.KEYDOWN and pygame.K_1 <= ev.key <= pygame.K_9:
+            idx = ev.key - pygame.K_1
+            if idx < len(self.opciones):
+                self.elegir(self.opciones[idx])
+
+    def update(self, dt):
+        super().update(dt)
+        pos = pygame.mouse.get_pos()
+        self.btn_leer.update(dt, pos)
+        for op in self.opciones:
+            op.update(dt, pos)
+
+    def dibujar_cierre(self, surf):
+        j = self.juego
+        self.dibujar_hud(surf)
+        if self.LEER_TEXTO:
+            self.btn_leer.dibujar(surf, j.fuentes)
+        dibujar_lina(surf, 78, ALTO - 124, 92, self.t, self.animo_lina, j.voz.boca)
+
+
+# ------------------------------------------- NIVEL 4: PALABRA Y DIBUJO
+class EscenaNivel4(EscenaLecturaBase):
+    NUM, NOMBRE = 4, "Nivel 4 - Palabra y Dibujo"
+    TOTAL_RONDAS = 8
+
+    def entrar(self):
+        todas = palabras_de_lectura()
+        self.pool = random.sample(todas, min(self.TOTAL_RONDAS, len(todas)))
+        self.TOTAL_RONDAS = len(self.pool)
+        self.tarjetas = [Tarjeta(400 + i * 240, 480, 220, 220) for i in range(3)]
+        self.banner = pygame.Rect(0, 0, 600, 124)
+        self.banner.center = (640, 192)
+        super().entrar()
+
+    def nueva_ronda(self):
+        self.icono = self.pool[self.ronda]
+        self.palabra = palabra_visible(self.icono)
+        ics = [self.icono] + distractores_lectura(self.icono, 2)
+        random.shuffle(ics)
+        self.opciones = [Opcion(t.rect, "", ic == self.icono)
+                         for t, ic in zip(self.tarjetas, ics)]
+        for t, ic in zip(self.tarjetas, ics):
+            t.poner(ic)
+        self.juego.fx.tocar("hoja")
+        self.juego.voz.decir(self.instruccion(), 3.5)
+
+    def instruccion(self):
+        return "Lee la palabra y toca su dibujo."
+
+    def update(self, dt):
+        super().update(dt)
+        for t in self.tarjetas:
+            t.update(dt)
+
+    def texto_error(self, objetivo):
+        return "Casi. Lee la palabra letra por letra y busca su dibujo."
+
+    def tocar_fondo(self, pos):
+        if self.banner.collidepoint(pos):          # ayuda: oir la palabra
+            self.juego.voz.decir(self.palabra, 1.6)
+
+    def al_acertar(self, op):
+        self.acierto(op.rect.centerx, op.rect.centery,
+                     f"Muy bien, {self.palabra}. Ese es su dibujo.", 1.8)
+
+    def dibujar(self, surf):
+        j = self.juego
+        j.bosque.dibujar(surf)
+        b = self.banner
+        sombra = pygame.Surface((b.w + 16, b.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (8, 14, b.w, b.h), border_radius=34)
+        surf.blit(sombra, (b.x - 8, b.y - 8))
+        pygame.draw.rect(surf, C_CREMA, b, border_radius=34)
+        pygame.draw.rect(surf, C_DORADO, b, 6, border_radius=34)
+        texto(surf, j.fuentes.titulo, self.palabra, b.centerx, b.centery - 2, C_TEXTO)
+        texto(surf, j.fuentes.cuerpo, "Lee la palabra y toca su dibujo",
+              640, 290, C_TEXTO, sombra=True)
+        texto(surf, j.fuentes.mini, "(toca la palabra si quieres oirla)",
+              640, 322, C_TEXTO_SUAVE)
+        for t, op in zip(self.tarjetas, self.opciones):
+            t.dibujar(surf, self.t)
+            r = t.rect
+            if op.estado == "bien":
+                pygame.draw.rect(surf, C_VERDE_OK, r.inflate(10, 10), 8,
+                                 border_radius=28)
+            elif op.estado == "mal":
+                velo = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
+                pygame.draw.rect(velo, (214, 112, 100, 120), (0, 0, r.w, r.h),
+                                 border_radius=24)
+                surf.blit(velo, r.topleft)
+                op.marca(surf, r.inflate(-12, -12))
+        self.dibujar_cierre(surf)
+
+
+# ------------------------------------------- NIVEL 5: FRASE INCOMPLETA
+class EscenaNivel5(EscenaLecturaBase):
+    NUM, NOMBRE = 5, "Nivel 5 - La Frase Incompleta"
+    TOTAL_RONDAS = 6
+
+    def entrar(self):
+        self.pool = random.sample(FRASES_INCOMPLETAS,
+                                  min(self.TOTAL_RONDAS, len(FRASES_INCOMPLETAS)))
+        self.TOTAL_RONDAS = len(self.pool)
+        self.tarjeta = Tarjeta(205, 245, 190, 190)
+        self.panel = pygame.Rect(330, 130, 840, 230)
+        self.completa = False
+        super().entrar()
+
+    def _armar_lineas(self, f):
+        esp = f.size(" ")[0]
+        hueco = f.size("mmmmmm")[0]
+        items = []
+        for p in self.frase.split(" "):
+            if p.startswith("___"):
+                resto = p[3:]
+                items.append((p, hueco + (f.size(resto)[0] if resto else 0), True))
+            else:
+                items.append((p, f.size(p)[0], False))
+        lineas, actual, w_act = [], [], 0
+        for it in items:
+            extra = it[1] + (esp if actual else 0)
+            if actual and w_act + extra > self.panel.w - 80:
+                lineas.append((actual, w_act))
+                actual, w_act = [it], it[1]
+            else:
+                actual.append(it)
+                w_act += extra
+        lineas.append((actual, w_act))
+        return lineas
+
+    def nueva_ronda(self):
+        self.frase, self.respuesta, dis, self.icono = self.pool[self.ronda]
+        self.completa = False
+        fu = self.juego.fuentes
+        self.fuente_frase = fu.h1
+        self.lineas = self._armar_lineas(fu.h1)
+        if len(self.lineas) > 2:
+            self.fuente_frase = fu.h2
+            self.lineas = self._armar_lineas(fu.h2)
+        self.ancho_hueco = self.fuente_frase.size("mmmmmm")[0]
+        textos = [self.respuesta] + dis[:2]
+        random.shuffle(textos)
+        self.opciones = [
+            Opcion((640 - 490 + i * 340 + 10, 440, 300, 100), e, e == self.respuesta)
+            for i, e in enumerate(textos)]
+        self.fuente_op = self.juego.fuentes.h1
+        self.juego.fx.tocar("hoja")
+        self.juego.voz.decir(self.instruccion(), 4.0)
+
+    def instruccion(self):
+        return "Lee la frase y escoge la palabra que falta."
+
+    def update(self, dt):
+        super().update(dt)
+        self.tarjeta.update(dt)
+
+    def texto_error(self, objetivo):
+        return "Casi. Lee la frase con esa palabra: ¿tiene sentido? Prueba otra."
+
+    def al_acertar(self, op):
+        self.completa = True
+        self.tarjeta.poner(self.icono)
+        completa = self.frase.replace("___", self.respuesta)
+        self.acierto(op.rect.centerx, op.rect.centery,
+                     f"{completa} ¡Muy bien!", 3.2)
+
+    def dibujar(self, surf):
+        j = self.juego
+        f = self.fuente_frase
+        j.bosque.dibujar(surf)
+        p = self.panel
+        sombra = pygame.Surface((p.w + 16, p.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (8, 14, p.w, p.h), border_radius=34)
+        surf.blit(sombra, (p.x - 8, p.y - 8))
+        pygame.draw.rect(surf, C_CREMA, p, border_radius=34)
+        pygame.draw.rect(surf, C_DORADO, p, 6, border_radius=34)
+        # dibujo de la respuesta (aparece al acertar)
+        if self.completa:
+            self.tarjeta.dibujar(surf, self.t)
+        else:
+            c = self.tarjeta.rect.center
+            pygame.draw.circle(surf, (255, 255, 255), c, 84)
+            pygame.draw.circle(surf, C_DORADO, c, 84, 5)
+            texto(surf, j.fuentes.h1, "?", c[0], c[1], (186, 180, 168))
+        # frase
+        esp = f.size(" ")[0]
+        lh = f.get_height() + 22
+        n = len(self.lineas)
+        y0 = p.centery - (n - 1) * lh / 2
+        for i, (its, w) in enumerate(self.lineas):
+            x = p.centerx - w / 2
+            y = y0 + i * lh
+            for tok, tw, hueco in its:
+                if hueco:
+                    hr = pygame.Rect(int(x), int(y - lh / 2 + 6), self.ancho_hueco, lh - 12)
+                    if self.completa:
+                        pygame.draw.rect(surf, (204, 240, 210), hr, border_radius=16)
+                        texto(surf, f, self.respuesta, hr.centerx, hr.centery,
+                              (30, 110, 60))
+                    else:
+                        pygame.draw.rect(surf, (255, 255, 255), hr, border_radius=16)
+                        grosor = 3 + int(abs(math.sin(self.t * 3)) * 2)
+                        pygame.draw.rect(surf, C_DORADO, hr, grosor, border_radius=16)
+                    resto = tok[3:]
+                    if resto:
+                        img = f.render(resto, True, C_TEXTO)
+                        surf.blit(img, (hr.right, y - img.get_height() / 2))
+                else:
+                    img = f.render(tok, True, C_TEXTO)
+                    surf.blit(img, (x, y - img.get_height() / 2))
+                x += tw + esp
+        texto(surf, j.fuentes.cuerpo, "¿Qué palabra completa la frase?",
+              640, 400, C_TEXTO, sombra=True)
+        for op in self.opciones:
+            op.dibujar(surf, self.fuente_op, self.t)
+        self.dibujar_cierre(surf)
+
+
+# ------------------------------------------- NIVEL 6: ORDENA LA ORACION
+class Ficha:
+    """Palabra suelta que se toca para armar la oracion."""
+
+    def __init__(self, txt, w, h):
+        self.texto = txt
+        self.rect = pygame.Rect(0, 0, w, h)
+        self.pos = [0.0, 0.0]
+        self.dest = (0, 0)
+        self.colocada = False
+        self.sacudida = 0.0
+        self.giro = random.uniform(-.05, .05)
+
+    def poner(self, x, y):
+        self.pos = [float(x), float(y)]
+        self.dest = (x, y)
+        self.rect.center = (int(x), int(y))
+
+    def update(self, dt):
+        k = min(dt * 10, 1.0)
+        self.pos[0] += (self.dest[0] - self.pos[0]) * k
+        self.pos[1] += (self.dest[1] - self.pos[1]) * k
+        self.rect.center = (int(self.pos[0]), int(self.pos[1]))
+        if self.sacudida > 0:
+            self.sacudida -= dt
+
+    def dibujar(self, surf, fuente, t):
+        r = self.rect.copy()
+        if self.sacudida > 0:
+            r.x += int(math.sin(t * 34) * 8)
+        cap = pygame.Surface((r.w + 16, r.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(cap, (0, 0, 0, 60), (8, 18, r.w, r.h), border_radius=18)
+        pygame.draw.rect(cap, C_MADERA_OSC, (8, 8, r.w, r.h), border_radius=18)
+        pygame.draw.rect(cap, (206, 158, 104), (8, 8, r.w, r.h - 8), border_radius=18)
+        pygame.draw.rect(cap, (226, 184, 132), (18, 16, r.w - 20, r.h * .34),
+                         border_radius=12)
+        img = fuente.render(self.texto, True, (86, 56, 34))
+        cap.blit(img, img.get_rect(center=(8 + r.w // 2, 8 + r.h // 2 - 4)))
+        if not self.colocada:
+            cap = pygame.transform.rotate(cap, math.degrees(self.giro))
+        surf.blit(cap, cap.get_rect(center=r.center))
+
+
+class EscenaNivel6(EscenaLecturaBase):
+    NUM, NOMBRE = 6, "Nivel 6 - El Pergamino Mágico"
+    TOTAL_RONDAS = 5
+
+    def entrar(self):
+        self.pool = random.sample(ORACIONES, min(self.TOTAL_RONDAS, len(ORACIONES)))
+        self.TOTAL_RONDAS = len(self.pool)
+        self.tarjeta = Tarjeta(640, 470, 210, 210)
+        self.fichas, self.slots, self.palabras = [], [], []
+        self.indice, self.completa = 0, False
+        super().entrar()
+
+    def nueva_ronda(self):
+        self.oracion, self.icono = self.pool[self.ronda]
+        self.palabras = self.oracion.split(" ")
+        self.indice, self.completa = 0, False
+        f = self.juego.fuentes.h2
+        alto, hueco = 66, 14
+        anchos = [f.size(p)[0] + 44 for p in self.palabras]
+        total = sum(anchos) + hueco * (len(anchos) - 1)
+        x = 640 - total / 2
+        self.slots = []
+        for w in anchos:
+            self.slots.append(pygame.Rect(int(x), 232 - alto // 2, w, alto))
+            x += w + hueco
+        orden = list(range(len(self.palabras)))
+        for _ in range(20):
+            random.shuffle(orden)
+            if len(orden) < 2 or orden != sorted(orden):
+                break
+        fichas = [Ficha(self.palabras[i], anchos[i], alto) for i in orden]
+        filas, fila, ancho_f = [], [], 0
+        for fi in fichas:
+            extra = fi.rect.w + (22 if fila else 0)
+            if fila and ancho_f + extra > 1000:
+                filas.append((fila, ancho_f))
+                fila, ancho_f = [fi], fi.rect.w
+            else:
+                fila.append(fi)
+                ancho_f += extra
+        filas.append((fila, ancho_f))
+        y0 = 450 - (len(filas) - 1) * 48
+        for k, (fila, aw) in enumerate(filas):
+            x = 640 - aw / 2
+            for fi in fila:
+                fi.poner(x + fi.rect.w / 2, y0 + k * 96)
+                x += fi.rect.w + 22
+        self.fichas = fichas
+        self.juego.fx.tocar("hoja")
+        self.juego.voz.decir(self.instruccion(), 5.0)
+
+    def instruccion(self):
+        return ("Toca las palabras en orden para armar la oración. "
+                "Empieza por la que lleva mayúscula.")
+
+    def texto_error(self, objetivo):
+        if self.indice == 0:
+            return "Casi. La oración empieza con mayúscula. Busca esa palabra."
+        return "Casi. Lee lo que ya armaste y piensa qué palabra sigue."
+
+    def tocar_fondo(self, pos):
+        for fi in reversed(self.fichas):
+            if not fi.colocada and fi.rect.collidepoint(pos):
+                self.elegir_ficha(fi)
+                return
+
+    def elegir_ficha(self, fi):
+        j = self.juego
+        if fi.texto == self.palabras[self.indice]:
+            fi.colocada = True
+            slot = self.slots[self.indice]
+            fi.dest = slot.center
+            self.indice += 1
+            j.fx.tocar("madera")
+            j.particulas.brillos(slot.centerx, slot.centery, 10)
+            if self.indice >= len(self.palabras):
+                self.completa = True
+                self.tarjeta.poner(self.icono)
+                self.acierto(slot.centerx, slot.centery,
+                             f"{self.oracion} ¡Muy bien!", 3.4)
+        else:
+            fi.sacudida = .5
+            self.error(None)
+
+    def update(self, dt):
+        super().update(dt)
+        self.tarjeta.update(dt)
+        for fi in self.fichas:
+            fi.update(dt)
+
+    def dibujar(self, surf):
+        j = self.juego
+        j.bosque.dibujar(surf)
+        pan = pygame.Rect(110, 138, 1060, 190)
+        sombra = pygame.Surface((pan.w + 16, pan.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (8, 14, pan.w, pan.h), border_radius=36)
+        surf.blit(sombra, (pan.x - 8, pan.y - 8))
+        pygame.draw.rect(surf, (255, 250, 235), pan, border_radius=36)
+        pygame.draw.rect(surf, C_MADERA, pan, 6, border_radius=36)
+        texto(surf, j.fuentes.chico, "Arma la oración aquí", pan.centerx,
+              pan.y + 30, C_TEXTO_SUAVE)
+        for i, r in enumerate(self.slots):
+            if i < self.indice:
+                continue
+            hueco = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
+            actual = i == self.indice
+            pygame.draw.rect(hueco, (150, 120, 80, 40), (0, 0, r.w, r.h), border_radius=18)
+            pygame.draw.rect(hueco, (176, 126, 78, 230 if actual else 120),
+                             (0, 0, r.w, r.h), 4, border_radius=18)
+            surf.blit(hueco, r.topleft)
+            if actual:
+                p = abs(math.sin(self.t * 3))
+                pygame.draw.rect(surf, C_DORADO, r.inflate(10 * p, 10 * p), 3,
+                                 border_radius=20)
+        texto(surf, j.fuentes.cuerpo, "Toca las palabras en orden", 640, 372,
+              C_TEXTO, sombra=True)
+        if self.completa:
+            self.tarjeta.dibujar(surf, self.t)
+        for fi in self.fichas:
+            fi.dibujar(surf, j.fuentes.h2, self.t)
+        self.dibujar_cierre(surf)
+
+
+# ------------------------------------------- NIVEL 7 y 8: CUENTOS
+class EscenaNivel7(EscenaLecturaBase):
+    """Un cuento corto y preguntas sobre lo que dice el texto."""
+
+    NUM, NOMBRE = 7, "Nivel 7 - Cuentos Cortos"
+    LEER_TEXTO = True
+    BANCO = CUENTOS_CORTOS
+    N_CUENTOS = 3
+    N_PREGUNTAS = 2
+    TOTAL_RONDAS = 6
+    ANCHO_OP = 316
+
+    def entrar(self):
+        self.pool = []
+        for h in random.sample(self.BANCO, min(self.N_CUENTOS, len(self.BANCO))):
+            idx = sorted(random.sample(range(len(h["preguntas"])), self.N_PREGUNTAS))
+            for i in idx:
+                self.pool.append((h, h["preguntas"][i]))
+        self.TOTAL_RONDAS = len(self.pool)
+        self.cuento = None
+        super().entrar()
+
+    def nueva_ronda(self):
+        h, (preg, ok, dis) = self.pool[self.ronda]
+        nuevo = h is not self.cuento
+        self.cuento, self.pregunta = h, preg
+        f = self.juego.fuentes
+        ancho_txt = 780 if h.get("icono") else 936
+        self.lineas = lineas_envueltas(f.cuerpo, h["texto"], ancho_txt)
+        self.lh = f.cuerpo.get_height() + 8
+        self.panel = pygame.Rect(140, 106, 1000, 20 + 46 + len(self.lineas) * self.lh + 16)
+        self.y_preg = self.panel.bottom + 32
+        etiquetas = [ok] + dis[:2]
+        random.shuffle(etiquetas)
+        self.fuente_op = self.ajustar_fuente(etiquetas, self.ANCHO_OP)
+        y_op = self.y_preg + 32
+        self.opciones = [
+            Opcion((140 + i * (self.ANCHO_OP + 26), y_op, self.ANCHO_OP, 88), e, e == ok)
+            for i, e in enumerate(etiquetas)]
+        self.juego.fx.tocar("hoja")
+        self.juego.voz.decir(self.instruccion(nuevo), 4.5)
+
+    def instruccion(self, nuevo=False):
+        if nuevo:
+            return f"Lee el cuento {self.cuento['titulo']} con atención. {self.pregunta}"
+        return self.pregunta
+
+    def texto_a_leer(self):
+        return f"{self.cuento['titulo']}. {self.cuento['texto']}"
+
+    def texto_error(self, objetivo):
+        return "Casi. Vuelve a leer el cuento con calma y busca la respuesta."
+
+    def al_acertar(self, op):
+        self.acierto(op.rect.centerx, op.rect.centery,
+                     f"Muy bien. {op.etiqueta}.", 1.8)
+
+    def dibujar(self, surf):
+        j = self.juego
+        f = j.fuentes
+        j.bosque.dibujar(surf)
+        p, h = self.panel, self.cuento
+        sombra = pygame.Surface((p.w + 16, p.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (8, 14, p.w, p.h), border_radius=30)
+        surf.blit(sombra, (p.x - 8, p.y - 8))
+        pygame.draw.rect(surf, (255, 250, 235), p, border_radius=30)
+        pygame.draw.rect(surf, C_MADERA, p, 6, border_radius=30)
+        texto(surf, f.h2, h["titulo"], p.x + 34, p.y + 16, (46, 92, 66), centro=False)
+        texto_izquierda(surf, f.cuerpo, self.lineas, p.x + 34, p.y + 66)
+        if h.get("icono"):
+            c = (p.right - 100, p.centery + 6)
+            pygame.draw.circle(surf, (238, 232, 216), c, 70)
+            pygame.draw.circle(surf, C_DORADO, c, 70, 5)
+            dibujar_icono(surf, h["icono"], c[0], c[1], 58, self.t)
+        fq = f.h2 if f.h2.size(self.pregunta)[0] <= 980 else f.cuerpo
+        texto(surf, fq, self.pregunta, 640, self.y_preg, C_TEXTO, sombra=True)
+        for op in self.opciones:
+            op.dibujar(surf, self.fuente_op, self.t)
+        self.dibujar_cierre(surf)
+
+
+class EscenaNivel8(EscenaNivel7):
+    """Cuento mas largo: orden de los hechos, inferencias e idea principal."""
+
+    NUM, NOMBRE = 8, "Nivel 8 - El Gran Cuento"
+    BANCO = GRAN_CUENTOS
+    N_CUENTOS = 1
+    N_PREGUNTAS = 4
+    TOTAL_RONDAS = 4
+
+    def texto_error(self, objetivo):
+        return ("Casi. Piensa con calma: a veces la respuesta no está escrita, "
+                "hay que pensarla con lo que leíste.")
+
+
+# ------------------------------------------- NIVEL 9: VERDAD O MENTIRA
+class EscenaNivel9(EscenaLecturaBase):
+    NUM, NOMBRE = 9, "Nivel 9 - Verdad o Mentira"
+    LEER_TEXTO = True
+    TOTAL_RONDAS = 6
+
+    def entrar(self):
+        self.pool = []
+        for p in random.sample(VERDAD_FALSO, min(self.TOTAL_RONDAS, len(VERDAD_FALSO))):
+            frase, verdad = random.choice(p["afirmaciones"])
+            self.pool.append((p, frase, verdad))
+        self.TOTAL_RONDAS = len(self.pool)
+        super().entrar()
+
+    def nueva_ronda(self):
+        self.pasaje, self.frase, self.verdad = self.pool[self.ronda]
+        f = self.juego.fuentes
+        self.lineas = lineas_envueltas(f.cuerpo, self.pasaje["texto"], 780)
+        self.lh = f.cuerpo.get_height() + 8
+        self.panel = pygame.Rect(140, 108, 1000, 28 + len(self.lineas) * self.lh + 12)
+        self.rect_frase = pygame.Rect(140, self.panel.bottom + 26, 1000, 110)
+        y_btn = self.rect_frase.bottom + 38
+        self.opciones = [
+            Opcion((250, y_btn, 360, 100), "Verdadero", self.verdad, (214, 242, 220)),
+            Opcion((670, y_btn, 360, 100), "Falso", not self.verdad, (250, 224, 214)),
+        ]
+        self.juego.fx.tocar("hoja")
+        self.juego.voz.decir(self.instruccion(), 4.5)
+
+    def instruccion(self):
+        return "Lee el texto y decide si la frase es verdadera o falsa."
+
+    def texto_a_leer(self):
+        return self.pasaje["texto"]
+
+    def texto_error(self, objetivo):
+        return "Casi. Vuelve a leer el texto y busca lo que dice la frase."
+
+    def al_acertar(self, op):
+        self.acierto(op.rect.centerx, op.rect.centery,
+                     "Muy bien, leíste con atención.", 1.8)
+
+    def dibujar(self, surf):
+        j = self.juego
+        f = j.fuentes
+        j.bosque.dibujar(surf)
+        p = self.panel
+        sombra = pygame.Surface((p.w + 16, p.h + 24), pygame.SRCALPHA)
+        pygame.draw.rect(sombra, (0, 0, 0, 60), (8, 14, p.w, p.h), border_radius=30)
+        surf.blit(sombra, (p.x - 8, p.y - 8))
+        pygame.draw.rect(surf, (255, 250, 235), p, border_radius=30)
+        pygame.draw.rect(surf, C_MADERA, p, 6, border_radius=30)
+        texto_izquierda(surf, f.cuerpo, self.lineas, p.x + 34, p.y + 20)
+        c = (p.right - 96, p.centery)
+        pygame.draw.circle(surf, (238, 232, 216), c, min(64, p.h // 2 - 6))
+        pygame.draw.circle(surf, C_DORADO, c, min(64, p.h // 2 - 6), 5)
+        dibujar_icono(surf, self.pasaje["icono"], c[0], c[1], 48, self.t)
+        r = self.rect_frase
+        pygame.draw.rect(surf, C_CREMA, r, border_radius=28)
+        pygame.draw.rect(surf, C_DORADO, r, 6, border_radius=28)
+        texto(surf, f.mini, "¿Verdadero o falso?", r.x + 34, r.y + 14,
+              C_TEXTO_SUAVE, centro=False)
+        ff = f.h1 if f.h1.size(self.frase)[0] <= r.w - 70 else f.h2
+        texto_envuelto(surf, ff, self.frase, r.centerx, r.centery + 12, r.w - 70)
+        for op in self.opciones:
+            op.dibujar(surf, f.h1, self.t)
+        self.dibujar_cierre(surf)
+
+
 # ------------------------------------------------------------- FIN DE NIVEL
 class EscenaFinNivel(Escena):
     def __init__(self, juego, nivel, estrellas, aciertos, errores):
@@ -2864,9 +4186,14 @@ class EscenaFinNivel(Escena):
         j.particulas.confeti(ANCHO // 2, 300, 70)
         self.btn = Boton((ANCHO // 2 - 170, ALTO - 140, 340, 76), "Continuar",
                          C_DORADO)
-        j.voz.decir(
-            f"Sendero completado. Ganaste {self.estrellas} estrellas y una "
-            f"estampa nueva para tu cuaderno.", 5.0)
+        if self.nivel >= TOTAL_NIVELES:
+            j.voz.decir(
+                f"Completaste todo el bosque. Ganaste {self.estrellas} estrellas "
+                f"y una estampa nueva. Eres un gran lector.", 6.0)
+        else:
+            j.voz.decir(
+                f"Sendero completado. Ganaste {self.estrellas} estrellas y una "
+                f"estampa nueva para tu cuaderno.", 5.0)
 
     def evento(self, ev):
         if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1 and self.btn.click(ev.pos):
@@ -2895,8 +4222,9 @@ class EscenaFinNivel(Escena):
         pygame.draw.rect(panel, (255, 255, 255, 245), (0, 0, 760, 430),
                          border_radius=40)
         surf.blit(panel, (ANCHO // 2 - 380, 120))
-        texto(surf, j.fuentes.h1, "Sendero completado", ANCHO // 2, 190,
-              (46, 92, 66))
+        titulo = ("Bosque completado" if self.nivel >= TOTAL_NIVELES
+                  else "Sendero completado")
+        texto(surf, j.fuentes.h1, titulo, ANCHO // 2, 190, (46, 92, 66))
         for i, tw in enumerate(self.animadas):
             e = tw.valor if i < self.estrellas else 0
             x = ANCHO // 2 - 130 + i * 130
@@ -2916,9 +4244,17 @@ class EscenaFinNivel(Escena):
 
 # ----------------------------------------------------------------- ALBUM
 class EscenaAlbum(Escena):
-    ESTAMPAS = [("oso", "OSO"), ("pato", "PATO"), ("sapo", "SAPO"),
-                ("luna", "LUNA"), ("mesa", "MESA"), ("lupa", "LUPA"),
-                ("puma", "PUMA"), ("mapa", "MAPA")]
+    # Dos estampas por sendero, en el orden de los niveles. Se desbloquean al
+    # completar ese nivel.
+    ESTAMPAS = [("abeja", "ABEJA"), ("elefante", "ELEFANTE"),
+                ("pato", "PATO"), ("sapo", "SAPO"),
+                ("luna", "LUNA"), ("paloma", "PALOMA"),
+                ("mapa", "MAPA"), ("mono", "MONO"),
+                ("sopa", "SOPA"), ("mesa", "MESA"),
+                ("oso", "OSO"), ("puma", "PUMA"),
+                ("estrella", "ESTRELLA"), ("arbol", "ARBOL"),
+                ("unicornio", "UNICORNIO"), ("iguana", "IGUANA"),
+                ("lupa", "LUPA"), ("uvas", "UVAS")]
 
     def entrar(self):
         self.btn = Boton((30, 30, 150, 54), "Volver", (214, 210, 200),
@@ -2938,28 +4274,32 @@ class EscenaAlbum(Escena):
     def dibujar(self, surf):
         j = self.juego
         j.bosque.dibujar(surf)
-        panel = pygame.Surface((1080, 470), pygame.SRCALPHA)
-        pygame.draw.rect(panel, (255, 252, 242, 245), (0, 0, 1080, 470),
+        panel = pygame.Surface((1100, 520), pygame.SRCALPHA)
+        pygame.draw.rect(panel, (255, 252, 242, 245), (0, 0, 1100, 520),
                          border_radius=36)
-        surf.blit(panel, (100, 150))
-        texto(surf, j.fuentes.h1, "Cuaderno del explorador", ANCHO // 2, 200,
+        surf.blit(panel, (90, 112))
+        texto(surf, j.fuentes.h1, "Cuaderno del explorador", ANCHO // 2, 160,
               (46, 92, 66))
         total = sum(j.progreso["estrellas"].values())
-        texto(surf, j.fuentes.cuerpo, f"Estrellas reunidas: {total}",
-              ANCHO // 2, 250, C_TEXTO_SUAVE)
-        desbloq = j.progreso["nivel_max"] * 3
+        hechos = sum(1 for v in j.progreso["estrellas"].values() if v)
+        texto(surf, j.fuentes.cuerpo,
+              f"Estrellas reunidas: {total}      Senderos completos: {hechos} de {TOTAL_NIVELES}",
+              ANCHO // 2, 206, C_TEXTO_SUAVE)
         for i, (ic, nom) in enumerate(self.ESTAMPAS):
-            x = 220 + (i % 4) * 240
-            y = 340 + (i // 4) * 170
-            abierto = i < desbloq
-            pygame.draw.circle(surf, (238, 232, 216), (x, y), 62)
+            x = 190 + (i % 6) * 180
+            y = 296 + (i // 6) * 126
+            nivel = i // 2 + 1
+            abierto = j.progreso["estrellas"].get(str(nivel), 0) > 0
+            pygame.draw.circle(surf, (238, 232, 216), (x, y), 46)
             if abierto:
-                pygame.draw.circle(surf, C_DORADO, (x, y), 62, 5)
-                dibujar_icono(surf, ic, x, y, 62, self.t + i)
-                texto(surf, j.fuentes.chico, nom, x, y + 84, C_TEXTO)
+                pygame.draw.circle(surf, C_DORADO, (x, y), 46, 5)
+                dibujar_icono(surf, ic, x, y, 46, self.t + i)
+                texto(surf, j.fuentes.mini, nom, x, y + 64, C_TEXTO)
             else:
-                pygame.draw.circle(surf, (206, 200, 186), (x, y), 62, 5)
-                texto(surf, j.fuentes.h1, "?", x, y, (186, 180, 168))
+                pygame.draw.circle(surf, (206, 200, 186), (x, y), 46, 5)
+                texto(surf, j.fuentes.h2, "?", x, y, (186, 180, 168))
+                texto(surf, j.fuentes.mini, f"Sendero {nivel}", x, y + 64,
+                      (170, 164, 152))
         self.btn.dibujar(surf, j.fuentes)
 
 
@@ -3028,6 +4368,16 @@ class Juego:
         datos = self._leer_almacen()
         if isinstance(datos, dict):
             base.update({k: datos.get(k, v) for k, v in base.items()})
+        # Partidas guardadas antes de los niveles de lectura: si ya habian
+        # completado un sendero, el siguiente queda abierto.
+        try:
+            hechos = [int(k) for k, v in base["estrellas"].items() if v]
+        except Exception:
+            hechos = []
+        if hechos:
+            base["nivel_max"] = max(base["nivel_max"],
+                                    min(max(hechos) + 1, TOTAL_NIVELES))
+        base["nivel_max"] = int(clamp(base["nivel_max"], 1, TOTAL_NIVELES))
         return base
 
     def guardar_resultado(self, nivel, estrellas):
@@ -3035,7 +4385,7 @@ class Juego:
         prev = self.progreso["estrellas"].get(clave, 0)
         self.progreso["estrellas"][clave] = max(prev, estrellas)
         self.progreso["nivel_max"] = max(self.progreso["nivel_max"],
-                                         min(nivel + 1, 3))
+                                         min(nivel + 1, TOTAL_NIVELES))
         self._escribir_almacen(self.progreso)
 
     # -- escenas -----------------------------------------------------------
